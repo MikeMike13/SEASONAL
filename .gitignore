@@ -1,0 +1,24 @@
+# Рабочие файлы X-13: программа общается через файлы на диске
+x13data/
+*.spc
+*.out
+*.err
+*.log
+*.d1*
+*.fct
+*.s1*
+
+# Результаты прогонов блокнотов
+*_passport.json
+*_series.csv
+*_forecast.csv
+Charts/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
+
+# Системное
+.DS_Store

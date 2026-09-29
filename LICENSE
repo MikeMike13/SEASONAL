@@ -1,0 +1,59 @@
+Этот репозиторий распространяется под двумя лицензиями.
+This repository is distributed under two licences.
+
+КОД — MIT / CODE — MIT
+    seasonal_toolbox.py, исходный код в блокнотах (ячейки с кодом)
+    seasonal_toolbox.py, the source code in the notebooks (code cells)
+
+МАТЕРИАЛЫ — CC BY 4.0 / MATERIALS — CC BY 4.0
+    пояснительный текст блокнотов, презентации, README, графики
+    the explanatory text of the notebooks, the presentations, the README, the charts
+    https://creativecommons.org/licenses/by/4.0/
+
+Данные в RU_M2_M_CB.xlsx и RU_TDAYSWKPC_M_GV.xlsx получены из открытых источников
+(Банк России, производственный календарь) и распространяются на условиях их
+правообладателей.
+The data in RU_M2_M_CB.xlsx and RU_TDAYSWKPC_M_GV.xlsx come from public sources
+(Bank of Russia, the official working calendar) on the terms of their rights holders.
+
+Бинарник X-13ARIMA-SEATS в репозиторий не входит: это отдельная программа Бюро
+переписи населения США со своими условиями распространения.
+The X-13ARIMA-SEATS binary is not part of this repository: it is a separate program
+by the US Census Bureau with its own terms.
+
+--------------------------------------------------------------------------------
+MIT License
+
+Copyright (c) 2026 exit10.ru
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Вы можете свободно копировать, распространять, перерабатывать и использовать
+материалы, в том числе в коммерческих целях, при одном условии: указать автора,
+дать ссылку на лицензию и обозначить, вносились ли изменения.
+
+You are free to copy, distribute, remix and use the materials, including
+commercially, under one condition: give appropriate credit, provide a link to
+the licence, and indicate if changes were made.
+
+Полный текст лицензии / full licence text:
+https://creativecommons.org/licenses/by/4.0/legalcode

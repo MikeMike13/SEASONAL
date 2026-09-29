@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: "Сезонная корректировка: блокноты, модуль и данные"
+message: "Если материалы использованы в публикации или исследовании, пожалуйста, сошлитесь так."
+type: software
+authors:
+  - name: "exit10.ru"
+    website: "https://exit10.ru"
+repository-code: "https://github.com/MikeMike13/SEASONAL"
+url: "https://exit10.ru"
+abstract: >-
+  Учебный и рабочий набор по сезонной корректировке временных рядов: блокноты с
+  разбором методов от Census Method I до X-13ARIMA-SEATS, модуль на ~160 функций,
+  шаблон для своего показателя и данные для воспроизведения. Материалы двуязычные.
+keywords:
+  - seasonal adjustment
+  - time series
+  - X-13ARIMA-SEATS
+  - ARIMA
+  - econometrics
+  - сезонная корректировка
+license: MIT
+license-url: "https://github.com/MikeMike13/SEASONAL/blob/main/LICENSE"
+date-released: 2026-09-29
+version: "1.0"
