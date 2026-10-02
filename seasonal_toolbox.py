@@ -12,8 +12,6 @@
 #
 #  Эта шапка едет вместе с файлом: если модуль скопируют в другой проект,
 #  авторство останется видимым там, где его действительно читают.
-#  This header travels with the file: if the module is copied elsewhere, the
-#  attribution stays where people actually look.
 # ============================================================================
 """seasonal_toolbox -- a toolkit for seasonal adjustment.  Version 1.0.
 
@@ -31,6 +29,7 @@ Usage:
 
     sx.X13_BIN = "/usr/local/bin/x13as"     # path to the X-13ARIMA-SEATS binary
     sx.DEFAULT_EASTER_TRADITION = "orthodox"
+    sx.enable_chart_autosave()              # optional: save every chart to Charts/
 
 Contents:
   * plotting style       -- econ_style, chart_frame, set_section, panel, cycle_colors
@@ -355,6 +354,25 @@ def panel(dates, series_dict, title, ylabel="", true_dict=None):
     ax.legend(loc="upper left", frameon=True, facecolor="white", fontsize=9)
     plt.tight_layout()
     plt.show()
+
+# --- Auto-saving every chart to Charts/ -------------------------------
+# plt.show() is patched once, by an explicit call to enable_chart_autosave()
+# from the notebook, not at import time: importing must have no side effects.
+# --- Автосохранение каждого графика в Charts/ -------------------------
+# Перехват plt.show() выполняется один раз, при вызове enable_chart_autosave()
+# из блокнота, а не при импорте модуля: импорт не должен иметь побочных эффектов.
+
+
+
+
+
+
+
+
+# ======================================================================
+#  THE REST OF THE TOOLKIT
+#  ОСТАЛЬНОЙ ИНСТРУМЕНТАРИЙ
+# ======================================================================
 
 def acf(x, nlags):
     """Autocorrelation function from scratch: ACF[k] is the correlation of the
@@ -2306,10 +2324,14 @@ def convert_to_level(values, input_format, dates=None):
             raise ValueError(tr(
                 "input_format='mom'/'qoq' ожидает ПРИРОСТ в процентах (например 0.6), а получены "
                 "значения около 100 -- похоже, это индекс к предыдущему периоду (100.6). "
-                "Передайте values - 100, либо input_format='level', если это уровень.",
+                "Передайте values - 100, либо input_format='level', если это уровень. "
+                "Если ряд уже приведён к уровню вызывающим кодом (convert_to_level выше), "
+                "передайте already_level=True в apply_passport/compare_methods.",
                 "input_format='mom'/'qoq' expects GROWTH in percent (e.g. 0.6), but the values are "
                 "around 100 -- this looks like an index to the previous period (100.6). "
-                "Pass values - 100, or input_format='level' if this is a level."))
+                "Pass values - 100, or input_format='level' if this is a level. If the series "
+                "was already converted by the caller, pass already_level=True to "
+                "apply_passport/compare_methods."))
         return 100 * np.cumprod(1 + values/100)
     elif input_format == "ytd_cumulative":
         s = pd.Series(values, index=pd.DatetimeIndex(dates))
@@ -3030,7 +3052,8 @@ def new_passport(indicator_id, name_ru, name_en="", source="", units="", frequen
                       "type": indicator_type, "input_format": input_format},
         "run": {"run_id": run_id, "calc_date": today, "data_cutoff": None, "status": "draft",
                 "parent_run": None, "valid_from": None, "valid_to": None,
-                "module_version": __version__, "author": os.getenv("USER", "")},
+                "module_version": __version__, "x13_build": X13_BUILD,
+                "data_hash": None, "run_folder": None, "author": os.getenv("USER", "")},
         "spec": {
             "transform": d["transform"],
             "preprocess": {
@@ -3204,7 +3227,7 @@ def passport_summary(passport):
     cal = s["preprocess"]["calendar"]
     outl = s["preprocess"]["outliers"]
     L = []
-    L.append(tr(f"Настройки показателя ({run['run_id']})", f"Indicator settings ({run['run_id']})"))
+    L.append(tr(f"Пересмотр {run['run_id']}  [{run['status']}]", f"Run {run['run_id']}  [{run['status']}]"))
     L.append(tr(f"  показатель : {ind['id']} -- {tx(ind['name'])} ({ind['type']}, {ind['frequency']}, вход: {ind['input_format']})",
                 f"  indicator  : {ind['id']} -- {tx(ind['name'])} ({ind['type']}, {ind['frequency']}, input: {ind['input_format']})"))
     L.append(tr(f"  данные до  : {run['data_cutoff']}   расчёт: {run['calc_date']}",
@@ -3281,9 +3304,7 @@ def save_passport(passport, path=None, note=""):
     Смысл файла в воспроизводимости: через полгода будет видно не только какие цифры
     получились, но и почему они такие. Имя по умолчанию -- <id показателя>_passport.json.
 
-    [EN] Save the indicator settings as JSON next to the notebook. The passport is a dictionary
-    of decisions -- transform, calendar, outliers, method, forecast horizon -- kept so that in
-    six months it is clear not only what the numbers were but why.
+    [EN] Save the indicator settings as JSON next to the notebook.
     """
     p = migrate_passport(passport)
     path = path or f"{p['indicator']['id']}_passport.json"
@@ -3364,10 +3385,10 @@ def load_indicator(table, path=None, date_col="Date", value_col="Value"):
     Returns a pd.Series with a DatetimeIndex sorted ascending. The data are read from the Excel
     or CSV file <path>, or from <table>.xlsx next to the notebook.
 
-    [RU] Загружает один показатель: один индикатор -- один Excel- или CSV-файл.
+    [RU] Загружает один показатель: один индикатор -- одна таблица (или одноимённый Excel-файл).
 
-    Возвращает pd.Series с возрастающим DatetimeIndex. Данные читаются из файла <path> либо из
-    <table>.xlsx рядом с блокнотом.
+    Возвращает pd.Series с возрастающим DatetimeIndex. Данные читаются из файла <path> либо
+    из <table>.xlsx рядом с блокнотом.
     """
     path = path or f"{table}.xlsx"
     if str(path).lower().endswith((".csv", ".txt")):
@@ -3393,6 +3414,7 @@ def load_indicator(table, path=None, date_col="Date", value_col="Value"):
                 f"If the version is old -- run %pip install --upgrade openpyxl and RESTART the kernel.\n"
                 f"Workaround: save the file as {os.path.splitext(str(path))[0]}.csv -- "
                 f"load_indicator() reads CSV without openpyxl.")) from ex
+
     if date_col not in df.columns or value_col not in df.columns:
         raise ValueError(tr(f"Ожидались колонки '{date_col}' и '{value_col}', получено: {list(df.columns)}",
                             f"Expected columns '{date_col}' and '{value_col}', got: {list(df.columns)}"))
@@ -3531,7 +3553,7 @@ def passport_to_kwargs(passport, working_days_calendar=None):
 
 
 def apply_passport(series, passport, working_days_calendar=None, plot_mode=None,
-                   update_policy=None, saar_n_sim=2000):
+                   update_policy=None, saar_n_sim=2000, already_level=False):
     """Apply a specification to data. This is the interface external models use: the notebook of
     an indicator produces the passport, everything else only executes it.
 
@@ -3579,6 +3601,14 @@ def apply_passport(series, passport, working_days_calendar=None, plot_mode=None,
             f"The data contain {n_new} observations after data_cutoff ({cutoff}); update policy: {policy}."))
 
     kw = passport_to_kwargs(p, working_days_calendar)
+    if already_level:
+        # Ряд уже приведён к уровню вызывающим кодом: так делает блокнот индикатора -- он
+        # показывает уровень на графиках и на нём же считает диагностику. Конвертировать
+        # второй раз нельзя: cumprod от уровня даёт бессмыслицу, а защита от индексной формы
+        # останавливает расчёт сообщением про «значения около 100».
+        # [EN] The series has already been converted by the caller; converting twice would
+        # make nonsense of it.
+        kw["input_format"] = "level"
     mode = p["spec"]["preprocess"]["outliers"]["mode"]
     if policy == "refit":
         kw["transform"] = "auto"
@@ -3606,7 +3636,7 @@ def apply_passport(series, passport, working_days_calendar=None, plot_mode=None,
         # ширине строки, передаёт движку выбросы, заданные аналитиком, и продлевает сезонные
         # факторы на горизонт -- это даёт прогноз SA-ряда.
         res = x13_run_passport(s, p, working_days_calendar=working_days_calendar,
-                               saar_n_sim=saar_n_sim)
+                               saar_n_sim=saar_n_sim, already_level=already_level)
         res["warnings"] = warnings_out
         res["applied_policy"] = policy
         res["passport"] = p
@@ -4006,7 +4036,8 @@ def plot_month_subseries(series, period=12, dark=False, title=None, subtitle=Non
     return fig, ax
 
 
-def revision_metric(series, passport, working_days_calendar=None, spans=(12, 24, 36), last=6):
+def revision_metric(series, passport, working_days_calendar=None, spans=(12, 24, 36), last=6,
+                    already_level=False):
     """Size of revisions: how much the estimate of the last months changes when new data arrive.
 
     The series is truncated by `spans` months, the specification is applied to the truncated sample,
@@ -4022,7 +4053,8 @@ def revision_metric(series, passport, working_days_calendar=None, spans=(12, 24,
     цифра, которая через два месяца станет другой, хуже чуть более шумной, но стабильной.
     """
     s = pd.Series(series).sort_index()
-    full = apply_passport(s, passport, working_days_calendar=working_days_calendar, saar_n_sim=0)
+    full = apply_passport(s, passport, working_days_calendar=working_days_calendar, saar_n_sim=0,
+                          already_level=already_level)
     sa_full = pd.Series(full["decomposition"]["sa"], index=pd.DatetimeIndex(full["dates"]))
     rows = []
     for k in spans:
@@ -4031,7 +4063,7 @@ def revision_metric(series, passport, working_days_calendar=None, spans=(12, 24,
         cut = s.iloc[:-k]
         try:
             rt = apply_passport(cut, passport, working_days_calendar=working_days_calendar,
-                                saar_n_sim=0, update_policy="frozen")
+                                saar_n_sim=0, update_policy="frozen", already_level=already_level)
         except Exception as ex:
             rows.append({"span": k, "mean_abs_rev_pct": np.nan, "max_abs_rev_pct": np.nan,
                          "note": f"{type(ex).__name__}"})
@@ -4045,7 +4077,7 @@ def revision_metric(series, passport, working_days_calendar=None, spans=(12, 24,
 
 
 def compare_methods(series, passport, engines=None, working_days_calendar=None,
-                    spans=(12, 24), period=12):
+                    spans=(12, 24), period=12, already_level=False):
     """Comparison of methods WITHOUT a known truth -- the main difference from the lecture.
 
     On real data the true seasonality does not exist, so RMSE against it cannot be computed. The
@@ -4097,13 +4129,15 @@ def compare_methods(series, passport, engines=None, working_days_calendar=None,
             rows.append({"engine": eng, "ok": False, "note": tr("не подключён к пайплайну", "not wired into the pipeline")})
             continue
         try:
-            r = apply_passport(s, p, working_days_calendar=working_days_calendar, saar_n_sim=0)
+            r = apply_passport(s, p, working_days_calendar=working_days_calendar, saar_n_sim=0,
+                           already_level=already_level)
         except Exception as ex:
             rows.append({"engine": eng, "ok": False, "note": f"{type(ex).__name__}: {ex}"[:60]})
             continue
         results[eng] = r
         sa = pd.Series(r["decomposition"]["sa"], index=pd.DatetimeIndex(r["dates"]))
-        rev = revision_metric(s, p, working_days_calendar=working_days_calendar, spans=spans)
+        rev = revision_metric(s, p, working_days_calendar=working_days_calendar, spans=spans,
+                              already_level=already_level)
         mom = 100 * (sa / sa.shift(1) - 1)
         bt = r.get("backtest") or {}
         # Quality is measured on DETRENDED series. On a strongly trending series (a money
@@ -4443,7 +4477,7 @@ forecast{{ maxlead={horizon} probability={prob} save=(fct) }}
 
 
 def x13_run_passport(series, passport, working_days_calendar=None, workdir=None, name="sa_x13",
-                     saar_n_sim=2000, seed=0):
+                     saar_n_sim=2000, seed=0, already_level=False):
     """Run the real x13as with the specification of the passport and return a result in the same
     shape as analyze_series(), so that the notebook and the model work with it identically.
 
@@ -4471,7 +4505,10 @@ def x13_run_passport(series, passport, working_days_calendar=None, workdir=None,
     if sample.get("end"):
         s = s[s.index <= pd.Timestamp(sample["end"])]
     dates = pd.DatetimeIndex(s.index)
-    y = np.asarray(convert_to_level(s.values, p["indicator"]["input_format"], dates=dates), dtype=float)
+    # already_level: ряд уже приведён к уровню вызывающим кодом, конвертировать второй раз
+    # нельзя. | The series is already a level; do not convert it twice.
+    _in_fmt = "level" if already_level else p["indicator"]["input_format"]
+    y = np.asarray(convert_to_level(s.values, _in_fmt, dates=dates), dtype=float)
 
     workdir = workdir or X13_WORKDIR
     os.makedirs(workdir, exist_ok=True)
@@ -4502,6 +4539,12 @@ def x13_run_passport(series, passport, working_days_calendar=None, workdir=None,
     sf = sf_t["sf"] if sf_t is not None else None
     seasonal = (sf.reindex(dates) if sf is not None else None)
 
+    # Мультипликативность определяется по САМИМ сезонным факторам: около 1 -- множители,
+    # около 0 -- слагаемые. По отчёту судить нельзя: строка «model fit to log transformed
+    # series» говорит о шкале модели ARIMA, а раскладка может быть аддитивной -- и тогда
+    # деление уровня на такой фактор даёт отрицательный прогноз.
+    # [EN] Judged by the seasonal factors themselves, not by the report: the log line there
+    # refers to the ARIMA scale, while the decomposition may still be additive.
     mult = p["spec"]["transform"] == "log" or (sf is not None and 0.5 < float(np.nanmedian(sf)) < 2)
     forecast = saar_fc = None
     if fc_t is not None and sf is not None:
@@ -4517,13 +4560,21 @@ def x13_run_passport(series, passport, working_days_calendar=None, workdir=None,
                     "ci": float(p["spec"]["output"].get("forecast_ci", 0.95)),
                     "forecast_original": fc_t["fc"].values,
                     "lo_original": fc_t["lo"].values, "hi_original": fc_t["hi"].values}
-        if saar_n_sim and mult:
+        if saar_n_sim:
             rng = np.random.default_rng(seed)
             h = len(fut)
-            sd = (np.log(hi_sa.values) - np.log(lo_sa.values)) / (2 * 1.96)
             w = np.cumsum(rng.standard_normal((saar_n_sim, h)), axis=1)
             w = w / np.sqrt(np.arange(1, h + 1))               # keep the printed marginal spread
-            paths = fc_sa.values * np.exp(sd * w)              # сохраняем напечатанный разброс
+            if mult:
+                sd = (np.log(hi_sa.values) - np.log(lo_sa.values)) / (2 * 1.96)
+                paths = fc_sa.values * np.exp(sd * w)          # сохраняем напечатанный разброс
+            else:
+                # Аддитивная модель: разброс задаётся в единицах ряда, а не в логарифме.
+                # Раньше веер строился только для мультипликативной, и у аддитивных рядов
+                # прогноз SAAR оставался точкой без интервала.
+                # [EN] Additive model: the spread is in the units of the series, not in logs.
+                sd = (hi_sa.values - lo_sa.values) / (2 * 1.96)
+                paths = fc_sa.values + sd * w
             full = np.concatenate([np.tile(sa.values, (saar_n_sim, 1)), paths], axis=1)
             dfp = pd.DataFrame(full.T)
             mode = p["spec"]["output"].get("saar_mode") or "level_ma"
